@@ -33,8 +33,10 @@ context.
 Participants
 ------------
 
-@aspiers and @GuthL.  Considerable help from @daira and @str4d
-gratefully acknowledged.
+[@aspiers](https://github.com/aspiers) and
+[@GuthL](https://github.com/GuthL).  Considerable help from
+[@daira](https://github.com/daira) and
+[@str4d](https://github.com/str4d) gratefully acknowledged.
 
 See also
 --------
