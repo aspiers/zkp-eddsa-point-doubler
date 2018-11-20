@@ -1,0 +1,58 @@
+// https://github.com/barryWhiteHat/baby_jubjub_ecc
+def aJ() -> (field):
+  return 168700
+
+def dJ() -> (field):
+  return 168696
+
+def assertOnCurve(field u, field v) -> (field):
+  // See appendix 3.3.1 of Zcash protocol specification:
+  // https://github.com/zcash/zips/blob/master/protocol/protocol.pdf
+  field uu = u * u
+  field vv = v * v
+  field uuvv = uu * vv
+  aJ() * uu + vv == 1 + dJ() * uuvv
+  return 1
+
+def double(field u, field v) -> (field, field):
+  // See https://en.wikipedia.org/wiki/Twisted_Edwards_curve#Doubling_on_twisted_Edwards_curves
+  field uu = u**2
+  field vv = v**2
+
+  field du = 2*u*v / (aJ() * uu + vv)
+  field dv = (vv - aJ() * uu)/(1 - dJ() * uu * vv)
+
+  // Alternatively we can use the curve equation itself to perform a
+  // simple substitution on the divisor, which eliminates the
+  // reference to dJ().  However, this requires extra parentheses in
+  // the divisor in order to avoid a Zokrates bug with associativity
+  // of subtraction of field values with function calls; see
+  // https://github.com/Zokrates/ZoKrates/issues/167
+  //
+  //field dv = (vv - aJ() * uu) / ((2 - aJ()*uu) - vv)
+
+  return du, dv
+
+def doubleOptimised(field u, field v) -> (field, field):
+  // This doubling technique is supposed to be optimised to use fewer
+  // R1CS constraints; see appendix 3.3.5 of Zcash protocol specification:
+  //
+  //   https://github.com/zcash/zips/blob/master/protocol/protocol.pdf
+  //
+  // However in practice we found that it used a few *more* constraints.
+  // We ran out of time establishing the reason for this.
+  field T = (u + v) * (v - aJ() * u)
+  field A = u * v
+  field C = dJ() * A * A
+  field u3 = (2 * A) / (1 + C)
+  field v3 = (T + (aJ() - 1) * A) / (1 - C)
+  return u3, v3
+
+def main(private field u, private field v, field u2, field v2) -> (field):
+  1 == assertOnCurve(u, v)
+  //du, dv = double(u, v)
+  du, dv = doubleOptimised(u, v)
+
+  u2 == du
+  v2 == dv
+  return 1
